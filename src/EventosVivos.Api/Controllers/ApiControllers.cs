@@ -121,9 +121,8 @@ public class ReservationsController(IMediator mediator) : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var all = await mediator.Send(new GetReservationsQuery(), cancellationToken);
-        var reserva = all.FirstOrDefault(r => r.Id == id);
-        return reserva is null ? NotFound() : Ok(reserva);
+        var result = await mediator.Send(new GetReservationByIdQuery(id), cancellationToken);
+        return Ok(result);
     }
 
     [HttpPost("{id:int}/confirm-payment")]

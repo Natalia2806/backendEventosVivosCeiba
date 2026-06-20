@@ -20,6 +20,18 @@ public class GetReservationsHandler(IReservationRepository reservationRepository
     }
 }
 
+public class GetReservationByIdHandler(IReservationRepository reservationRepository)
+    : IRequestHandler<GetReservationByIdQuery, ReservaDto>
+{
+    public async Task<ReservaDto> Handle(GetReservationByIdQuery request, CancellationToken cancellationToken)
+    {
+        var reserva = await reservationRepository.GetByIdAsync(request.Id, cancellationToken)
+            ?? throw new NotFoundException($"Reserva con id {request.Id} no encontrada.");
+
+        return EntityMapper.ToDto(reserva);
+    }
+}
+
 public class GetOccupancyReportHandler(
     IEventRepository eventRepository,
     IUnitOfWork unitOfWork,

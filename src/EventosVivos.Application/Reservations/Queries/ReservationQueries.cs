@@ -5,4 +5,6 @@ namespace EventosVivos.Application.Reservations.Queries;
 
 public record GetReservationsQuery : IRequest<IReadOnlyList<ReservaDto>>;
 
+public record GetReservationByIdQuery(int Id) : IRequest<ReservaDto>;
+
 public record GetOccupancyReportQuery(int EventoId) : IRequest<OccupancyReportDto>;
