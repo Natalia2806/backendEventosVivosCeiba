@@ -29,6 +29,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.Logger.LogInformation("CORS origins: {Origins}", string.Join(", ", allowedOrigins));
+
 await app.Services.InitializeDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
@@ -37,6 +39,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapControllers();
@@ -54,11 +57,21 @@ static string[] GetAllowedOrigins(IConfiguration configuration)
     var frontendUrl = configuration["FRONTEND_URL"]
         ?? Environment.GetEnvironmentVariable("FRONTEND_URL");
     if (!string.IsNullOrWhiteSpace(frontendUrl))
-        origins.Add(frontendUrl.Trim());
+    {
+        origins.AddRange(frontendUrl.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    }
+
+    for (var i = 0; i < 5; i++)
+    {
+        var indexed = configuration[$"Cors:AllowedOrigins:{i}"]
+            ?? Environment.GetEnvironmentVariable($"Cors__AllowedOrigins__{i}");
+        if (!string.IsNullOrWhiteSpace(indexed))
+            origins.Add(indexed.Trim());
+    }
 
     return origins.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() is { Length: > 0 } result
         ? result
-        : ["http://localhost:4200"];
+        : ["http://localhost:4200", "https://eventos-vivos-api.netlify.app"];
 }
 
 public partial class Program { }
