@@ -17,13 +17,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddTransient(typeof(MediatR.IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?.Where(origin => !string.IsNullOrWhiteSpace(origin))
-    .ToArray();
-
-var allowedOrigins = configuredOrigins is { Length: > 0 }
-    ? configuredOrigins
-    : ["http://localhost:4200"];
+var allowedOrigins = GetAllowedOrigins(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
@@ -43,10 +37,28 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseCors();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+static string[] GetAllowedOrigins(IConfiguration configuration)
+{
+    var origins = new List<string>();
+
+    var configured = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+    if (configured is not null)
+        origins.AddRange(configured.Where(origin => !string.IsNullOrWhiteSpace(origin)));
+
+    var frontendUrl = configuration["FRONTEND_URL"]
+        ?? Environment.GetEnvironmentVariable("FRONTEND_URL");
+    if (!string.IsNullOrWhiteSpace(frontendUrl))
+        origins.Add(frontendUrl.Trim());
+
+    return origins.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() is { Length: > 0 } result
+        ? result
+        : ["http://localhost:4200"];
+}
 
 public partial class Program { }
