@@ -221,7 +221,10 @@ dotnet test tests/EventosVivos.UnitTests
     "DefaultConnection": "Data Source=eventosvivos.db"
   },
   "Cors": {
-    "AllowedOrigins": ["http://localhost:4200"]
+    "AllowedOrigins": [
+      "http://localhost:4200",
+      "https://eventos-vivos-api.netlify.app"
+    ]
   }
 }
 ```
